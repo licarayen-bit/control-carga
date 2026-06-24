@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSE Recylink</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F5F7FA; color: #1a1a2e; min-height: 100vh; }
+nav { background: #0F3D6E; padding: 0 20px; height: 52px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.nav-brand { display: flex; align-items: center; gap: 8px; }
+.nav-dot { width: 26px; height: 26px; background: #2DB04B; border-radius: 6px; }
+.nav-title { color: white; font-size: 15px; font-weight: 600; }
+.nav-tabs { display: flex; gap: 3px; }
+.nav-tab { padding: 5px 12px; border-radius: 6px; font-size: 13px; color: rgba(255,255,255,0.6); cursor: pointer; border: none; background: transparent; }
+.nav-tab:hover { color: white; background: rgba(255,255,255,0.1); }
+.nav-tab.active { color: white; background: rgba(255,255,255,0.18); }
+.cse-badge { background: #2DB04B; color: white; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 99px; }
+.page { display: none; padding: 20px; max-width: 900px; margin: 0 auto; }
+.page.active { display: block; }
+.card { background: white; border-radius: 12px; border: 1px solid #E8ECF0; padding: 18px; margin-bottom: 14px; }
+.card-title { font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px; }
+.form-row { display: grid; gap: 10px; margin-bottom: 12px; }
+.cols-2 { grid-template-columns: 1fr 1fr; }
+.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+label { display: block; font-size: 12px; font-weight: 500; color: #6B7280; margin-bottom: 4px; }
+select, input[type="text"], input[type="number"], textarea {
+  width: 100%; padding: 7px 10px; border: 1px solid #D1D5DB; border-radius: 8px;
+  font-size: 13px; color: #1a1a2e; background: white; outline: none;
+}
+select:focus, input:focus, textarea:focus { border-color: #0F3D6E; }
+.auto-field { background: #F5F7FA; border: 1px solid #E8ECF0; border-radius: 8px; padding: 7px 10px; font-size: 13px; color: #6B7280; min-height: 34px; }
+.suc-panel { border: 1px solid #D1D5DB; border-radius: 8px; max-height: 200px; overflow-y: auto; background: white; display: none; }
+.suc-group-header { padding: 5px 10px 3px; background: #F9FAFB; border-bottom: 1px solid #F3F4F6; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; font-weight: 600; color: #374151; }
+.suc-item { padding: 5px 10px 5px 26px; border-bottom: 1px solid #FAFAFA; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: #374151; }
+.suc-item:hover, .suc-group-header:hover { background: #F0F9FF; }
+.selected-bar { display: none; margin-top: 7px; padding: 7px 12px; background: #EFF6FF; border-radius: 8px; font-size: 13px; color: #1E40AF; align-items: center; justify-content: space-between; }
+.totals-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.total-box { background: #F5F7FA; border-radius: 8px; padding: 10px 12px; text-align: center; }
+.total-val { font-size: 20px; font-weight: 700; color: #0F3D6E; }
+.total-lbl { font-size: 11px; color: #9CA3AF; margin-top: 2px; }
+.cat-header { font-size: 11px; font-weight: 600; color: white; padding: 3px 8px; border-radius: 5px; margin: 8px 0 4px; display: inline-block; }
+.cat-SOP { background: #0F3D6E; } .cat-SAS { background: #2DB04B; } .cat-EDU { background: #7C3AED; } .cat-COM { background: #D97706; }
+.svc-row { display: grid; grid-template-columns: 20px 1fr 80px; align-items: center; gap: 8px; padding: 7px 2px; border-bottom: 1px solid #F3F4F6; }
+.svc-row:last-child { border-bottom: none; }
+.svc-name { font-size: 13px; color: #374151; }
+.svc-code { font-size: 11px; color: #9CA3AF; font-family: monospace; }
+.btn-primary { background: #0F3D6E; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; }
+.btn-primary:hover { opacity: 0.88; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-danger { background: #DC2626; }
+.btn-sec { background: white; color: #0F3D6E; border: 1px solid #0F3D6E; padding: 7px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+.status-msg { padding: 9px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; display: none; }
+.status-ok  { background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; }
+.status-err { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+.status-loading { background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; }
+.metric-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 16px; }
+.metric { background: white; border-radius: 10px; border: 1px solid #E8ECF0; padding: 14px; }
+.metric-val { font-size: 26px; font-weight: 700; color: #0F3D6E; }
+.metric-lbl { font-size: 11px; color: #9CA3AF; margin-top: 3px; }
+.bar-row { display: grid; grid-template-columns: 55px 1fr 55px; align-items: center; gap: 8px; margin-bottom: 8px; }
+.bar-track { background: #F3F4F6; border-radius: 99px; height: 9px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 99px; transition: width 0.4s; }
+.hist-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.hist-table th { text-align: left; padding: 7px 8px; background: #F5F7FA; color: #6B7280; font-size: 11px; font-weight: 600; text-transform: uppercase; border-bottom: 1px solid #E8ECF0; }
+.hist-table td { padding: 7px 8px; border-bottom: 1px solid #F3F4F6; color: #374151; }
+.hist-table tr:last-child td { border-bottom: none; }
+.pill { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 99px; font-weight: 500; }
+.pill-lore { background:#DBEAFE;color:#1E40AF; } .pill-lica { background:#DCFCE7;color:#166534; }
+.pill-domi { background:#EDE9FE;color:#5B21B6; } .pill-rod  { background:#FEF3C7;color:#92400E; }
+.empty-state { text-align: center; padding: 32px; color: #9CA3AF; font-size: 13px; }
+.filter-row { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+.filter-row select, .filter-row input { width: auto; }
+.filter-lbl { font-size: 13px; color: #6B7280; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <div class="nav-dot"></div>
+    <span class="nav-title">CSE Recylink</span>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('ingreso',this)">Ingreso</button>
+    <button class="nav-tab" onclick="showPage('dashboard',this)">Dashboard</button>
+    <button class="nav-tab" onclick="showPage('historial',this)">Historial</button>
+    <button class="nav-tab" onclick="showPage('clientes',this)">Clientes</button>
+    <button class="nav-tab" onclick="showPage('config',this)">Config</button>
+  </div>
+  <span class="cse-badge" id="nav-cse-badge">-</span>
+</nav>
+
+<!-- INGRESO -->
+<div id="page-ingreso" class="page active">
+  <div class="card">
+    <div class="card-title">Quién y cuándo?</div>
+    <div class="form-row cols-3">
+      <div>
+        <label>CSE *</label>
+        <select id="sel-cse" onchange="onCSEChange()">
+          <option value="">- Seleccionar -</option>
+          <option>Lore</option><option>Lica</option><option>Domi</option><option>Rod</option>
+        </select>
+      </div>
+      <div>
+        <label>Mes *</label>
+        <select id="sel-mes">
+          <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+          <option value="4">Abril</option><option value="5" selected>Mayo</option><option value="6">Junio</option>
+          <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+          <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+        </select>
+      </div>
+      <div>
+        <label>Año *</label>
+        <select id="sel-ano">
+          <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label>Sucursales * <small style="color:#9CA3AF">- podés seleccionar varias con la misma distribución</small></label>
+        <input type="text" id="suc-search" placeholder="Buscar empresa o sucursal..." oninput="filtrarSucursales()" disabled>
+        <div class="suc-panel" id="suc-panel"></div>
+        <div class="selected-bar" id="selected-bar">
+          <span id="selected-count">0 seleccionadas</span>
+          <button onclick="limpiarSucursales()" style="background:none;border:none;color:#6B7280;cursor:pointer;font-size:12px;text-decoration:underline">Limpiar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Servicios entregados este mes <span id="svc-hint" style="font-size:11px;font-weight:400;color:#9CA3AF"></span></div>
+    <div class="totals-bar">
+      <div class="total-box"><div class="total-val" id="tot-svcs">0</div><div class="total-lbl">Servicios x sucursales</div></div>
+      <div class="total-box"><div class="total-val" id="tot-hh">0.00</div><div class="total-lbl">HH reales totales</div></div>
+      <div class="total-box"><div class="total-val" id="tot-ref" style="color:#6B7280;font-size:16px">0.00</div><div class="total-lbl">HH referenciales</div></div>
+    </div>
+    <div id="svcs-container"><div class="empty-state">Selecciona un CSE y al menos una sucursal</div></div>
+  </div>
+
+  <div class="card">
+    <label>Notas del mes (opcional)</label>
+    <textarea id="txt-notas" rows="2" placeholder="Observaciones del mes..."></textarea>
+  </div>
+
+  <div id="ingreso-status" class="status-msg"></div>
+  <button class="btn-primary" onclick="guardarEntregas()">Guardar entregas del mes</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page">
+
+  <!-- FILTRO MENSUAL -->
+  <div style="background:white;border:1px solid #BFDBFE;border-radius:10px;padding:12px 16px;margin-bottom:4px">
+    <div style="font-size:11px;font-weight:700;color:#0F3D6E;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Filtro análisis mensual</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <div style="display:flex;align-items:center;gap:6px">
+        <label style="font-size:12px;color:#6B7280;margin:0">Año</label>
+        <select id="d-ano" onchange="renderDashboard()" style="width:auto">
+          <option value="0">Todos</option>
+          <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <label style="font-size:12px;color:#6B7280;margin:0">Mes</label>
+        <select id="d-mes" onchange="renderDashboard()" style="width:auto">
+          <option value="0">Todos</option>
+          <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+          <option value="4">Abril</option><option value="5" selected>Mayo</option><option value="6">Junio</option>
+          <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+          <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <label style="font-size:12px;color:#6B7280;margin:0">CSE</label>
+        <select id="d-cse-global" onchange="renderDashboard()" style="width:auto">
+          <option value="">Todos</option>
+          <option>Lore</option><option>Lica</option><option>Domi</option><option>Rod</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEPARADOR MENSUAL -->
+  <div style="display:flex;align-items:center;gap:10px;margin:16px 0 8px">
+    <div style="height:2px;flex:1;background:linear-gradient(to right,#0F3D6E,transparent)"></div>
+    <span style="font-size:12px;font-weight:700;color:#0F3D6E;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap">Análisis mensual</span>
+    <div style="height:2px;flex:1;background:linear-gradient(to left,#0F3D6E,transparent)"></div>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric"><div class="metric-val" id="m-hh">—</div><div class="metric-lbl">HH totales equipo</div></div>
+    <div class="metric"><div class="metric-val" id="m-ent">—</div><div class="metric-lbl">Servicios entregados</div></div>
+    <div class="metric"><div class="metric-val" id="m-suc">—</div><div class="metric-lbl">Sucursales activas</div></div>
+    <div class="metric"><div class="metric-val" id="m-svcu">—</div><div class="metric-lbl">Servicios distintos</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Carga por CSE (HH)</div>
+    <div id="cse-bars"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">HH por servicio</div>
+    <div style="position:relative;height:380px">
+      <canvas id="chart-industria"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Frecuencia de servicios entregados</div>
+    <div id="top-svcs"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">HH por empresa y CSE</div>
+    <div style="position:relative;height:420px">
+      <canvas id="chart-empresas"></canvas>
+    </div>
+  </div>
+
+  <!-- FILTRO COMPARATIVO -->
+  <div style="background:white;border:1px solid #A7F3D0;border-radius:10px;padding:12px 16px;margin-top:24px;margin-bottom:4px">
+    <div style="font-size:11px;font-weight:700;color:#2DB04B;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Filtro análisis comparativo</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <div style="display:flex;align-items:center;gap:6px">
+        <label style="font-size:12px;color:#6B7280;margin:0">Año</label>
+        <select id="d-ano-evol" onchange="renderDashboard()" style="width:auto">
+          <option value="0">Todos</option>
+          <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <label style="font-size:12px;color:#6B7280;margin:0">CSE</label>
+        <div id="cse-toggles" style="display:flex;gap:4px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEPARADOR COMPARATIVO -->
+  <div style="display:flex;align-items:center;gap:10px;margin:16px 0 8px">
+    <div style="height:2px;flex:1;background:linear-gradient(to right,#2DB04B,transparent)"></div>
+    <span style="font-size:12px;font-weight:700;color:#2DB04B;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap">Análisis comparativo</span>
+    <div style="height:2px;flex:1;background:linear-gradient(to left,#2DB04B,transparent)"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Evolución mensual de carga (HH)</div>
+    <div style="position:relative;height:260px">
+      <canvas id="chart-evolucion"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Sucursales activas por CSE mes a mes</div>
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap" id="cse-toggles-suc"></div>
+    <div style="position:relative;height:260px">
+      <canvas id="chart-sucursales"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- HISTORIAL -->
+<div id="page-historial" class="page">
+  <div class="filter-row" style="flex-wrap:wrap;gap:8px">
+    <span class="filter-lbl">Filtrar:</span>
+    <select id="h-cse" onchange="actualizarFiltrosHistorial()">
+      <option value="">Todos los CSE</option>
+      <option>Lore</option><option>Lica</option><option>Domi</option><option>Rod</option>
+    </select>
+    <select id="h-empresa" onchange="actualizarFiltrosHistorial()">
+      <option value="">Todas las empresas</option>
+    </select>
+    <select id="h-sucursal" onchange="renderHistorial()">
+      <option value="">Todas las sucursales</option>
+    </select>
+    <select id="h-codigo" onchange="renderHistorial()">
+      <option value="">Todos los servicios</option>
+    </select>
+    <select id="h-mes" onchange="renderHistorial()">
+      <option value="0">Todos los meses</option>
+      <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+      <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+      <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+      <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+    </select>
+    <select id="h-ano" onchange="renderHistorial()">
+      <option value="0">Todos los años</option>
+      <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+    </select>
+    <button id="btn-del-filtrados" style="background:none;border:1px solid #FECACA;color:#DC2626;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer">Eliminar filtrados</button>
+  </div>
+  <div class="card">
+    <div id="hist-container"></div>
+  </div>
+</div>
+
+<!-- CLIENTES -->
+<div id="page-clientes" class="page">
+  <div class="card">
+    <div class="card-title">+ Agregar nueva sucursal</div>
+    <div class="form-row cols-2">
+      <div><label>Empresa *</label><input type="text" id="n-empresa" placeholder="Ej: Euro Constructora" list="emp-list"><datalist id="emp-list"></datalist></div>
+      <div><label>Nombre sucursal *</label><input type="text" id="n-sucursal" placeholder="Ej: Proyecto Las Lilas"></div>
+    </div>
+    <div class="form-row cols-3">
+      <div>
+        <label>CSE *</label>
+        <select id="n-cse"><option value="">- Seleccionar -</option><option>Lore</option><option>Lica</option><option>Domi</option><option>Rod</option></select>
+      </div>
+      <div>
+        <label>Industria *</label>
+        <select id="n-industria">
+          <option value="">- Seleccionar -</option>
+          <option>Construcción</option><option>Combustible</option><option>Retail</option><option>Alimentos</option>
+          <option>Alimentaria</option><option>Hospital</option><option>Ministerio</option><option>Hotelería</option>
+          <option>Automotriz</option><option>Energía</option><option>Bodegas</option><option>Industria</option><option>Minería</option>
+        </select>
+      </div>
+      <div>
+        <label>Dificultad</label>
+        <select id="n-dif"><option value="1.0">1.0 Normal</option><option value="1.1">1.1 Medio</option><option value="1.2">1.2 Alto</option><option value="0.5">0.5 Bajo</option></select>
+      </div>
+    </div>
+    <div id="add-status" class="status-msg"></div>
+    <button class="btn-primary" onclick="agregarSucursal()">Agregar sucursal</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title"> Cerrar sucursal</div>
+    <p style="font-size:13px;color:#6B7280;margin-bottom:12px">La sucursal quedará inactiva. El historial se conserva.</p>
+    <div class="form-row cols-2">
+      <div><label>CSE</label><select id="c-cse" onchange="cargarSucursalesCierre()"><option value="">- Seleccionar -</option><option>Lore</option><option>Lica</option><option>Domi</option><option>Rod</option></select></div>
+      <div><label>Sucursal</label><select id="c-suc"><option value="">- Selecciona CSE primero -</option></select></div>
+    </div>
+    <div id="close-status" class="status-msg"></div>
+    <button class="btn-primary btn-danger" onclick="cerrarSucursal()">Marcar como cerrada</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title"> Sucursales activas</div>
+    <div class="filter-row" style="margin-bottom:10px">
+      <select id="l-cse" onchange="renderLista()"><option value="">Todos los CSE</option><option>Lore</option><option>Lica</option><option>Domi</option><option>Rod</option></select>
+      <input type="text" id="l-search" placeholder="Buscar..." oninput="renderLista()" style="flex:1">
+    </div>
+    <div id="lista-container"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Servicios contratados por empresa</div>
+    <p style="font-size:13px;color:#6B7280;margin-bottom:12px">Define que servicios contrató cada empresa. En el ingreso mensual solo apareceran estos.</p>
+    <div class="form-row">
+      <div>
+        <label>Empresa</label>
+        <select id="svc-empresa" onchange="renderServiciosEmpresa()" style="width:100%">
+          <option value="">— Seleccionar empresa —</option>
+        </select>
+      </div>
+    </div>
+    <div id="svc-empresa-container"></div>
+    <div id="svc-empresa-status" class="status-msg"></div>
+  </div>
+
+</div>
+
+<!-- CONFIG -->
+<div id="page-config" class="page">
+  <div class="card">
+    <div class="card-title">Google Sheet - Base de datos compartida</div>
+    <p style="font-size:13px;color:#6B7280;margin-bottom:12px">Los datos se sincronizan automáticamente con el Sheet cada vez que guardas entregas.</p>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <a href="https://docs.google.com/spreadsheets/d/1uX7ab2OMPTVc7sJJ6Z2za-rvlb2C7WuDITH2wr69fw4/edit" target="_blank" class="btn-sec"> Abrir Sheet en Drive</a>
+      <button class="btn-sec" onclick="sincronizarDesdeSheet()"> Sincronizar desde Sheet</button>
+    </div>
+    <div id="cfg-status" class="status-msg"></div>
+    <div style="background:#F5F7FA;border-radius:8px;padding:12px;font-size:12px;color:#6B7280">
+      <strong style="color:#374151">URL del Script:</strong><br>
+      <span style="font-family:monospace;font-size:11px;word-break:break-all">https://script.google.com/macros/s/AKfycbwt_dEksmrGblkrDz3LsMlzBpESyqZI7be0jGsUvCXyZr5piBdfGOnfilyznlTGBPGQ/exec</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- DATOS MAESTROS -----------------------------------------------------------
+const SUCURSALES_BASE = [
+  {empresa:"ABASTIBLE",sucursal:"Concón",cse:"Lore",industria:"Combustible"},
+  {empresa:"ABASTIBLE",sucursal:"Lenga",cse:"Lore",industria:"Combustible"},
+  {empresa:"ABASTIBLE",sucursal:"OC",cse:"Lore",industria:"Combustible"},
+  {empresa:"ABASTIBLE",sucursal:"Osorno",cse:"Lore",industria:"Combustible"},
+  {empresa:"ABASTIBLE",sucursal:"Talca",cse:"Lore",industria:"Combustible"},
+  {empresa:"ANDO",sucursal:"ETB",cse:"Lore",industria:"Construcción"},
+  {empresa:"CLÍNICA DÁVILA",sucursal:"Recoleta",cse:"Lore",industria:"Hospital"},
+  {empresa:"COPEC",sucursal:"CD 1217 Iquique",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"CD 1218 Antofagasta",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"CD 1219 Antofagasta La Negra",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"CD 1220 Copiapo",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"CD 1224 Concepción",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"CD 1225 Puerto Montt",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"CD 1226 Coyhaique",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"CD 1229 Punta Arenas",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"CD 1240 Santiago",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"CDC Maipú",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"Edificio Isidora",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"PAD Planta Chacabuco",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"PAD Planta Arica",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"PAD Planta Caldera",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"PAD Planta Chillan",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"PAD Planta Concon",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"PAD Planta Guayacán",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"PAD Planta Iquique",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"PAD Planta Maipú",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"PAD Planta Mejillones",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"PAD Planta Pureo",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"PAD Planta TPI",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"PP Planta Bluemax",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"PP Planta Lubricantes Quintero",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"RALLY MOBIL",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"SIAV COPEC - PAD Planta SIAV",cse:"Lore",industria:"Combustible"},
+  {empresa:"COPEC",sucursal:"VOLTEX SPA - Bodega Operaciones Isidora",cse:"Lore",industria:"Retail"},
+  {empresa:"CTEC",sucursal:"Patio de Gestion",cse:"Lore",industria:"Construcción"},
+  {empresa:"DAIKIN",sucursal:"Daikin",cse:"Lore",industria:"Industria"},
+  {empresa:"Gespania",sucursal:"General Jofre",cse:"Lore",industria:"Construcción"},
+  {empresa:"Gespania",sucursal:"El Rosal",cse:"Lore",industria:"Construcción"},
+  {empresa:"Novatec",sucursal:"Pucara",cse:"Lore",industria:"Construcción"},
+  {empresa:"Novatec",sucursal:"Brisas de San Pedro",cse:"Lore",industria:"Construcción"},
+  {empresa:"Obra Limpia",sucursal:"Banco Falabella",cse:"Lore",industria:"Construcción"},
+  {empresa:"Obra Limpia",sucursal:"Portal La Foresta",cse:"Lore",industria:"Construcción"},
+  {empresa:"Obra Limpia",sucursal:"Terratec - Only las Pircas",cse:"Lore",industria:"Construcción"},
+  {empresa:"Obra Limpia",sucursal:"Terratec - Altos de Mercedes",cse:"Lore",industria:"Construcción"},
+  {empresa:"Obra Limpia",sucursal:"Terratec - Cumbre",cse:"Lore",industria:"Construcción"},
+  {empresa:"ACCIONA",sucursal:"Hospital la Serena",cse:"Lica",industria:"Construcción"},
+  {empresa:"AKIKB",sucursal:"Plaza Norte III",cse:"Lica",industria:"Bodegas"},
+  {empresa:"AUTOMERCADO",sucursal:"Centro de distribución",cse:"Lica",industria:"Retail"},
+  {empresa:"CCU",sucursal:"Embotelladora Renca",cse:"Lica",industria:"Alimentos"},
+  {empresa:"EMPRESAS SOCOVESA",sucursal:"Almagro - IV Centenario",cse:"Lica",industria:"Construcción"},
+  {empresa:"EMPRESAS SOCOVESA",sucursal:"Almagro - Las Lilas",cse:"Lica",industria:"Construcción"},
+  {empresa:"EMPRESAS SOCOVESA",sucursal:"Almagro - Índico (antofagasta)",cse:"Lica",industria:"Construcción"},
+  {empresa:"EMPRESAS SOCOVESA",sucursal:"Almagro - Lyon Bilbao",cse:"Lica",industria:"Construcción"},
+  {empresa:"EMPRESAS SOCOVESA",sucursal:"Almagro - San Eugenio",cse:"Lica",industria:"Construcción"},
+  {empresa:"EMPRESAS SOCOVESA",sucursal:"COSAN - Las Pataguas 11",cse:"Lica",industria:"Construcción"},
+  {empresa:"EMPRESAS SOCOVESA",sucursal:"COSAN - Las Pataguas 12",cse:"Lica",industria:"Construcción"},
+  {empresa:"EMPRESAS SOCOVESA",sucursal:"Socovesa Sur - Icono y origen",cse:"Lica",industria:"Construcción"},
+  {empresa:"EMPRESAS SOCOVESA",sucursal:"Socovesa Sur - Parque Olimpia III",cse:"Lica",industria:"Construcción"},
+  {empresa:"EMPRESAS SOCOVESA",sucursal:"SOCOVESA S.A. - Eliodoro Yañez",cse:"Lica",industria:"Construcción"},
+  {empresa:"EMPRESAS SOCOVESA",sucursal:"SOCOVESA S.A. - Oficina Temuco",cse:"Lica",industria:"Construcción"},
+  {empresa:"Euro",sucursal:"Proyecto Departamental",cse:"Lica",industria:"Construcción"},
+  {empresa:"Euro",sucursal:"Proyecto Amengual",cse:"Lica",industria:"Construcción"},
+  {empresa:"Euro",sucursal:"Santa Elena",cse:"Lica",industria:"Construcción"},
+  {empresa:"Euro",sucursal:"Entre Vicuñas",cse:"Lica",industria:"Construcción"},
+  {empresa:"Euro",sucursal:"San Pablo Trotter",cse:"Lica",industria:"Construcción"},
+  {empresa:"Euro",sucursal:"Alto Irarrázaval",cse:"Lica",industria:"Construcción"},
+  {empresa:"Euro",sucursal:"Zañartu",cse:"Lica",industria:"Construcción"},
+  {empresa:"Euro",sucursal:"Mirador Irarrázaval",cse:"Lica",industria:"Construcción"},
+  {empresa:"Euro",sucursal:"Don Pepe II",cse:"Lica",industria:"Construcción"},
+  {empresa:"FRUZCO",sucursal:"Planta fabal frio",cse:"Lica",industria:"Alimentaria"},
+  {empresa:"Inchcape",sucursal:"D&P Lo Boza",cse:"Lica",industria:"Automotriz"},
+  {empresa:"ISA Energía",sucursal:"Oficina central",cse:"Lica",industria:"Energía"},
+  {empresa:"ISA Vias",sucursal:"Ruta del Maipo",cse:"Lica",industria:"Construcción"},
+  {empresa:"PARQUEMET",sucursal:"Bosques Santiago",cse:"Lica",industria:"Ministerio"},
+  {empresa:"PARQUEMET",sucursal:"Casino",cse:"Lica",industria:"Ministerio"},
+  {empresa:"PARQUEMET",sucursal:"Galpones",cse:"Lica",industria:"Ministerio"},
+  {empresa:"PARQUEMET",sucursal:"Oficinas Administrativas",cse:"Lica",industria:"Ministerio"},
+  {empresa:"PARQUEMET",sucursal:"Parque Metropolitano de Santiago",cse:"Lica",industria:"Ministerio"},
+  {empresa:"PARQUEMET",sucursal:"Vivero Leilantú",cse:"Lica",industria:"Ministerio"},
+  {empresa:"PARQUEMET",sucursal:"Zoológico",cse:"Lica",industria:"Ministerio"},
+  {empresa:"PARQUEMET",sucursal:"Bosque Cumbres",cse:"Lica",industria:"Ministerio"},
+  {empresa:"PARQUEMET",sucursal:"Dominica 175",cse:"Lica",industria:"Ministerio"},
+  {empresa:"TOP",sucursal:"OC",cse:"Domi",industria:"Retail"},
+  {empresa:"Explora",sucursal:"PNP",cse:"Rod",industria:"Hotelería"},
+  ...["HC Parque Arauco","Co Antofagasta","CO Cantagallo","CO Rancagua","Co Valparaiso","Co Viña del Mar","HC 11 Iquique","HC 32 Arica","HC 57 Copiapó","HC Alto Hospicio","Hc Angol","HC Antofagasta","Hc Antofagasta La Portada","Hc Autopista Talcahuano","HC Calama","HC Cerrillos","Hc Chicureo Express","Hc Chillán","HC Chiloé","HC Copiapó Cordillera","Hc Coquimbo","Hc Coronel","Hc Coyhaique","Hc Curicó","HC El Belloto","HC El Bosque","Hc Estación Central","HC Huechuraba","Hc Independencia","HC La Calera","HC La Reina","HC La Serena","Hc La Serena (Balmaceda 2)","HC Las Condes","Hc Linares","Hc Los Angeles","HC Los Dominicos","Hc Maipú","HC Maitencillo","HC Mall Bío Bío","HC Mallplaza El Trébol","HC Melipilla","HC Nueva La Florida","HC Ñuble","HC Ñuñoa/La Reina","Hc Osorno","Hc Ovalle","Hc Plaza Vespucio","Hc Puente Alto","Hc Puerto Montt","Hc Puerto Montt - Alerce","Hc Punta Arenas","HC Quilicura","HC Quilin","Hc Quillota","Hc Quinta Vergara","HC Rancagua","HC Reñaca","HC San Antonio","Hc San Bernardo","HC San Felipe","HC San Fernando","Hc San Miguel","HC Santa Cruz","Hc Talagante","HC Talca","Hc Talca-Colín","Hc Temuco Cautín","Hc Temuco Los Pablos","Hc Tobalaba","Hc Valdivia","Hc Vallenar","HC Villarrica II","HC Viña del Mar","Reconstructor Cauquenes"].map(s=>({empresa:"SODIMAC",sucursal:s,cse:"Domi",industria:"Retail"})),
+];
+
+const SERVICIOS = [
+  {codigo:"SOP-001",nombre:"Seguimiento operación costo-eficiente",cat:"SOP",hh:0.25},
+  {codigo:"SOP-002",nombre:"Certificado gestor REP",cat:"SOP",hh:0.25},
+  {codigo:"SOP-003",nombre:"Resolución Sanitaria gestor",cat:"SOP",hh:0.25},
+  {codigo:"SOP-004",nombre:"Certificaciones ambientales",cat:"SOP",hh:0.5},
+  {codigo:"SOP-005",nombre:"Declaración Consumidor Industrial REP",cat:"SOP",hh:0.5},
+  {codigo:"SOP-006",nombre:"Asesoría VU RETC",cat:"SOP",hh:0.25},
+  {codigo:"SOP-007",nombre:"Auditoría en gestión de residuos",cat:"SOP",hh:1.0},
+  {codigo:"SOP-008",nombre:"Carga histórica de trazabilidad",cat:"SOP",hh:1.0},
+  {codigo:"SOP-009",nombre:"Carga mensual de trazabilidad",cat:"SOP",hh:0.5},
+  {codigo:"SOP-010",nombre:"Verificación de trazabilidad",cat:"SOP",hh:0.25},
+  {codigo:"SOP-011",nombre:"Certificado de gestión",cat:"SOP",hh:0.25},
+  {codigo:"SOP-012",nombre:"Cotización con proveedores",cat:"SOP",hh:0.25},
+  {codigo:"SOP-013",nombre:"Declaración Jurada Anual (DJA)",cat:"SOP",hh:0.5},
+  {codigo:"SOP-014",nombre:"Declaración SIDREP",cat:"SOP",hh:0.5},
+  {codigo:"SOP-015",nombre:"Declaración SINADER",cat:"SOP",hh:0.5},
+  {codigo:"SOP-016",nombre:"Recomendaciones de proveedores",cat:"SOP",hh:0.25},
+  {codigo:"SOP-017",nombre:"Documentos personalizados",cat:"SOP",hh:0.5},
+  {codigo:"SOP-020",nombre:"Capacitación plataforma",cat:"SOP",hh:0.5},
+  {codigo:"SOP-021.1",nombre:"Registro Consumos",cat:"SOP",hh:0.5},
+  {codigo:"SOP-021.2",nombre:"Registro Consumos DAE",cat:"SOP",hh:0.5},
+  {codigo:"SOP-021.3",nombre:"Registro Consumos con Cálculo de huella de Carbono",cat:"SOP",hh:0.5},
+  {codigo:"SOP-021.4",nombre:"Registro Consumos automático",cat:"SOP",hh:0.5},
+  {codigo:"SOP-022",nombre:"Asesoría en SUSPEL y RESPEL",cat:"SOP",hh:0.5},
+  {codigo:"SOP-023",nombre:"Customer Success Executive",cat:"SOP",hh:1.0},
+  {codigo:"SOP-024",nombre:"Visita a terreno",cat:"SOP",hh:2.0},
+  {codigo:"SOP-025",nombre:"Reporte de Sostenibilidad",cat:"SOP",hh:2.0},
+  {codigo:"SOP-026",nombre:"Diseño Gráfico Reporte Sostenibilidad",cat:"SOP",hh:2.0},
+  {codigo:"SOP-027",nombre:"Plan Gestión Huella de Carbono",cat:"SOP",hh:2.0},
+  {codigo:"SAS-001",nombre:"Plataforma de trazabilidad y reportabilidad",cat:"SAS",hh:0.25},
+  {codigo:"SAS-002",nombre:"Plataforma de trazabilidad y reportabilidad para gestor",cat:"SAS",hh:0.25},
+  {codigo:"SAS-003",nombre:"Carga Directa del Proveedor",cat:"SAS",hh:0.25},
+  {codigo:"SAS-004",nombre:"Plataforma destinatario de residuos",cat:"SAS",hh:0.25},
+  {codigo:"SAS-005",nombre:"Módulo Ecosistema de Proveedores",cat:"SAS",hh:0.5},
+  {codigo:"SAS-006",nombre:"Módulo REP - Productor de Producto Prioritario",cat:"SAS",hh:0.5},
+  {codigo:"SAS-007",nombre:"Módulo operaciones",cat:"SAS",hh:0.25},
+  {codigo:"SAS-008",nombre:"Plataforma gestor de residuos",cat:"SAS",hh:0.25},
+  {codigo:"SAS-009",nombre:"Registro de Consumos (beta)",cat:"SAS",hh:0.25},
+  {codigo:"EDU-001",nombre:"Asesoría en Gestión de Residuos",cat:"EDU",hh:1.5},
+  {codigo:"EDU-002",nombre:"Asesoría Ley REP Consumidor Industrial",cat:"EDU",hh:1.0},
+  {codigo:"EDU-003",nombre:"Asesoría Ley REP Productor Producto Prioritario",cat:"EDU",hh:1.0},
+  {codigo:"EDU-004.1",nombre:"Charla Educación Online",cat:"EDU",hh:1.0},
+  {codigo:"EDU-004.2",nombre:"Charla Educación extendida Online",cat:"EDU",hh:1.5},
+  {codigo:"EDU-004.3",nombre:"Charla Educación presencial",cat:"EDU",hh:2.0},
+  {codigo:"EDU-005",nombre:"Intervenciones de Alto Impacto",cat:"EDU",hh:2.0},
+  {codigo:"EDU-006",nombre:"Taller",cat:"EDU",hh:2.0},
+  {codigo:"COM-001",nombre:"Caracterización de Residuos",cat:"COM",hh:1.0},
+  {codigo:"COM-002",nombre:"Declaración Productor Producto Prioritario (REP Continua)",cat:"COM",hh:0.5},
+  {codigo:"COM-003",nombre:"Puntos Verdes",cat:"COM",hh:0.5},
+  {codigo:"COM-004",nombre:"Voluntariado Ambiental",cat:"COM",hh:0.5},
+];
+
+const MESES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+// --- ESTADO -------------------------------------------------------------------
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwt_dEksmrGblkrDz3LsMlzBpESyqZI7be0jGsUvCXyZr5piBdfGOnfilyznlTGBPGQ/exec";
+let SHEET_ID = '1uX7ab2OMPTVc7sJJ6Z2za-rvlb2C7WuDITH2wr69fw4';
+let historial = JSON.parse(localStorage.getItem('cse_historial') || '[]');
+let syncPendiente = JSON.parse(localStorage.getItem('cse_sync_pendiente') || '[]');
+let sucCustom = JSON.parse(localStorage.getItem('cse_suc_custom') || '[]');
+let sucCerradas = JSON.parse(localStorage.getItem('cse_suc_cerradas') || '[]');
+let serviciosEmpresa = JSON.parse(localStorage.getItem('cse_svc_empresa') || '{}');
+
+function guardarServiciosEmpresa() {
+  localStorage.setItem('cse_svc_empresa', JSON.stringify(serviciosEmpresa));
+}
+
+function getServiciosEmpresa(empresa) {
+  return serviciosEmpresa[empresa] || SERVICIOS.map(s => s.codigo);
+}
+let sucSeleccionadas = [];
+let sucFiltradas = [];
+
+function guardarHistorial() {
+  localStorage.setItem('cse_historial', JSON.stringify(historial));
+}
+
+// --- SYNC CON GOOGLE SHEETS (JSONP para evitar CORS) -------------------------
+function jsonpCall(url) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'cb_' + Date.now();
+    const script = document.createElement('script');
+    const timeout = setTimeout(() => {
+      delete window[cbName];
+      script.remove();
+      reject(new Error('timeout'));
+    }, 10000);
+    window[cbName] = (data) => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      script.remove();
+      resolve(data);
+    };
+    script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cbName;
+    script.onerror = () => { clearTimeout(timeout); reject(new Error('error')); };
+    document.head.appendChild(script);
+  });
+}
+
+async function syncConSheet(filas) {
+  try {
+    const url = SCRIPT_URL + '?action=append&data=' + encodeURIComponent(JSON.stringify(filas));
+    const res = await jsonpCall(url);
+    return res && res.ok;
+  } catch (e) { return false; }
+}
+
+async function eliminarEnSheet(id) {
+  try {
+    const url = SCRIPT_URL + '?action=delete&_id=' + encodeURIComponent(id);
+    const res = await jsonpCall(url);
+    return res && res.ok;
+  } catch (e) { return false; }
+}
+
+async function actualizarHHEnSheet(id, hh) {
+  try {
+    const url = SCRIPT_URL + '?action=update_hh&_id=' + encodeURIComponent(id) + '&hh_reales=' + hh;
+    const res = await jsonpCall(url);
+    return res && res.ok;
+  } catch (e) { return false; }
+}
+
+async function cargarDesdeSheet(cse, mes, ano) {
+  try {
+    let url = SCRIPT_URL + '?action=read';
+    if (cse) url += '&cse=' + encodeURIComponent(cse);
+    if (mes) url += '&mes=' + mes;
+    if (ano) url += '&ano=' + ano;
+    const res = await jsonpCall(url);
+    if (res && res.ok) return res.data;
+    return null;
+  } catch (e) { return null; }
+}
+function getSucActivas() {
+  return [...SUCURSALES_BASE, ...sucCustom].filter(s =>
+    !sucCerradas.some(c => c.empresa===s.empresa && c.sucursal===s.sucursal)
+  );
+}
+
+// --- NAVEGACIÓN ---------------------------------------------------------------
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'historial') { inicializarFiltrosHistorial(); }
+  if (name === 'clientes') { renderLista(); actualizarDatalist(); cargarEmpresasSelectorSvc(); }
+}
+
+// --- INGRESO ------------------------------------------------------------------
+function onCSEChange() {
+  const cse = document.getElementById('sel-cse').value;
+  document.getElementById('nav-cse-badge').textContent = cse || '-';
+  sucSeleccionadas = [];
+  const search = document.getElementById('suc-search');
+  const panel = document.getElementById('suc-panel');
+  search.disabled = !cse;
+  search.value = '';
+  if (!cse) { panel.style.display = 'none'; actualizarBarraSeleccion(); renderServicios(false); return; }
+  sucFiltradas = getSucActivas().filter(s => s.cse === cse);
+  panel.style.display = 'block';
+  renderPanel(sucFiltradas);
+  actualizarBarraSeleccion();
+  renderServicios(false);
+}
+
+function filtrarSucursales() {
+  const q = document.getElementById('suc-search').value.toLowerCase();
+  const cse = document.getElementById('sel-cse').value;
+  sucFiltradas = getSucActivas().filter(s => s.cse === cse &&
+    (s.sucursal.toLowerCase().includes(q) || s.empresa.toLowerCase().includes(q)));
+  renderPanel(sucFiltradas);
+}
+
+function renderPanel(lista) {
+  const panel = document.getElementById('suc-panel');
+  if (!lista.length) { panel.innerHTML = '<div style="padding:10px;color:#9CA3AF;font-size:13px;text-align:center">Sin resultados</div>'; return; }
+  const byEmp = {};
+  lista.forEach(s => { if (!byEmp[s.empresa]) byEmp[s.empresa] = []; byEmp[s.empresa].push(s); });
+  panel.innerHTML = '';
+  Object.entries(byEmp).forEach(([emp, sucs]) => {
+    const allSel = sucs.every(s => sucSeleccionadas.some(x => x.empresa===s.empresa && x.sucursal===s.sucursal));
+    const hdr = document.createElement('div');
+    hdr.className = 'suc-group-header';
+    const chk = document.createElement('input'); chk.type = 'checkbox'; chk.checked = allSel && sucs.length > 0;
+    hdr.appendChild(chk);
+    const lbl = document.createElement('span'); lbl.textContent = emp + ' (' + sucs.length + ')';
+    hdr.appendChild(lbl);
+    hdr.addEventListener('click', () => toggleEmpresa(emp, sucs));
+    chk.addEventListener('click', e => { e.stopPropagation(); toggleEmpresa(emp, sucs); });
+    panel.appendChild(hdr);
+    sucs.forEach(s => {
+      const row = document.createElement('div');
+      row.className = 'suc-item';
+      const c = document.createElement('input'); c.type = 'checkbox';
+      c.checked = sucSeleccionadas.some(x => x.empresa===s.empresa && x.sucursal===s.sucursal);
+      row.appendChild(c);
+      const nm = document.createElement('span'); nm.textContent = s.sucursal; nm.style.flex = '1';
+      row.appendChild(nm);
+      const ind = document.createElement('span'); ind.textContent = s.industria; ind.style.cssText = 'font-size:11px;color:#9CA3AF';
+      row.appendChild(ind);
+      row.addEventListener('click', () => toggleSucursal(s));
+      c.addEventListener('click', e => { e.stopPropagation(); toggleSucursal(s); });
+      panel.appendChild(row);
+    });
+  });
+}
+
+function toggleSucursal(s) {
+  const idx = sucSeleccionadas.findIndex(x => x.empresa===s.empresa && x.sucursal===s.sucursal);
+  if (idx >= 0) sucSeleccionadas.splice(idx, 1); else sucSeleccionadas.push(s);
+  actualizarBarraSeleccion();
+  renderPanel(sucFiltradas);
+  renderServicios(sucSeleccionadas.length > 0);
+}
+
+function toggleEmpresa(emp, sucs) {
+  const allSel = sucs.every(s => sucSeleccionadas.some(x => x.empresa===s.empresa && x.sucursal===s.sucursal));
+  if (allSel) sucSeleccionadas = sucSeleccionadas.filter(s => s.empresa !== emp);
+  else sucs.forEach(s => { if (!sucSeleccionadas.some(x => x.empresa===s.empresa && x.sucursal===s.sucursal)) sucSeleccionadas.push(s); });
+  actualizarBarraSeleccion();
+  renderPanel(sucFiltradas);
+  renderServicios(sucSeleccionadas.length > 0);
+}
+
+function limpiarSucursales() {
+  sucSeleccionadas = [];
+  const cse = document.getElementById('sel-cse').value;
+  sucFiltradas = getSucActivas().filter(s => s.cse === cse);
+  renderPanel(sucFiltradas);
+  actualizarBarraSeleccion();
+  renderServicios(false);
+}
+
+function actualizarBarraSeleccion() {
+  const bar = document.getElementById('selected-bar');
+  const n = sucSeleccionadas.length;
+  if (n > 0) {
+    bar.style.display = 'flex';
+    const emps = [...new Set(sucSeleccionadas.map(s => s.empresa))];
+    document.getElementById('selected-count').textContent = n + ' sucursal' + (n>1?'es':'') + ' - ' + (emps.length===1 ? emps[0] : emps.slice(0,2).join(', ') + (emps.length>2?'...':''));
+  } else {
+    bar.style.display = 'none';
+  }
+  document.getElementById('svc-hint').textContent = n > 1 ? '(se aplicará a ' + n + ' sucursales)' : '';
+  calcularTotales();
+}
+
+function renderServicios(mostrar) {
+  const cont = document.getElementById('svcs-container');
+  if (!mostrar) { cont.innerHTML = '<div class="empty-state">Selecciona al menos una sucursal</div>'; calcularTotales(); return; }
+  cont.innerHTML = '';
+
+  // Obtener empresas únicas de las sucursales seleccionadas
+  const empresasSeleccionadas = [...new Set(sucSeleccionadas.map(s => s.empresa))];
+  // Unión de servicios contratados por todas las empresas seleccionadas
+  const codigosPermitidos = new Set();
+  empresasSeleccionadas.forEach(emp => getServiciosEmpresa(emp).forEach(c => codigosPermitidos.add(c)));
+  const mostrarTodos = document.getElementById('chk-mostrar-todos')?.checked || codigosPermitidos.size === 0;
+
+  // Agregar toggle "mostrar todos"
+  const toggleDiv = document.createElement('div');
+  toggleDiv.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:6px 8px;background:#F5F7FA;border-radius:6px';
+  const chkTodos = document.createElement('input');
+  chkTodos.type = 'checkbox'; chkTodos.id = 'chk-mostrar-todos';
+  chkTodos.checked = mostrarTodos;
+  chkTodos.addEventListener('change', () => renderServicios(true));
+  const lblTodos = document.createElement('label');
+  lblTodos.htmlFor = 'chk-mostrar-todos';
+  lblTodos.style.cssText = 'font-size:12px;color:#6B7280;cursor:pointer';
+  lblTodos.textContent = 'Mostrar todos los servicios (incluyendo no contratados)';
+  toggleDiv.appendChild(chkTodos); toggleDiv.appendChild(lblTodos);
+  cont.appendChild(toggleDiv);
+
+  let lastCat = '';
+  const serviciosFiltrados = mostrarTodos ? SERVICIOS : SERVICIOS.filter(s => codigosPermitidos.has(s.codigo));
+  serviciosFiltrados.forEach((s) => {
+    const idxReal = SERVICIOS.indexOf(s);
+    if (s.cat !== lastCat) {
+      const hdr = document.createElement('div');
+      hdr.innerHTML = '<span class="cat-header cat-' + s.cat + '">' + s.cat + '</span>';
+      cont.appendChild(hdr);
+      lastCat = s.cat;
+    }
+    const row = document.createElement('div'); row.className = 'svc-row';
+    const chk = document.createElement('input'); chk.type = 'checkbox'; chk.id = 'chk' + idxReal;
+    const lbl = document.createElement('div');
+    lbl.innerHTML = '<div class="svc-name">' + s.nombre + '</div><div class="svc-code">' + s.codigo + ' - ref ' + s.hh + ' HH</div>';
+    lbl.style.cssText = 'cursor:pointer';
+    lbl.addEventListener('click', () => { chk.checked = !chk.checked; toggleServicio(idxReal); });
+    const inp = document.createElement('input'); inp.type = 'number'; inp.id = 'hh' + idxReal;
+    inp.value = s.hh; inp.step = '0.25'; inp.min = '0'; inp.disabled = true;
+    inp.style.cssText = 'width:70px;padding:4px 6px;font-size:12px;text-align:center;border:1px solid #D1D5DB;border-radius:6px';
+    chk.addEventListener('change', () => toggleServicio(idxReal));
+    inp.addEventListener('input', calcularTotales);
+    row.appendChild(chk); row.appendChild(lbl); row.appendChild(inp);
+    cont.appendChild(row);
+  });
+  calcularTotales();
+}
+
+function toggleServicio(i) {
+  const chk = document.getElementById('chk' + i);
+  const inp = document.getElementById('hh' + i);
+  if (!inp) return;
+  inp.disabled = !chk.checked;
+  if (chk.checked && !inp.value) inp.value = SERVICIOS[i].hh;
+  calcularTotales();
+}
+
+function calcularTotales() {
+  let nSvcs = 0, hhReal = 0, hhRef = 0;
+  SERVICIOS.forEach((s, i) => {
+    const chk = document.getElementById('chk' + i);
+    const inp = document.getElementById('hh' + i);
+    if (chk && chk.checked) { nSvcs++; hhReal += parseFloat(inp.value||0); hhRef += s.hh; }
+  });
+  const nSucs = sucSeleccionadas.length || 1;
+  document.getElementById('tot-svcs').textContent = sucSeleccionadas.length > 1 ? nSvcs + ' x ' + sucSeleccionadas.length : nSvcs;
+  document.getElementById('tot-hh').textContent = (hhReal * nSucs).toFixed(2);
+  document.getElementById('tot-ref').textContent = (hhRef * nSucs).toFixed(2);
+}
+
+function guardarEntregas() {
+  const cse = document.getElementById('sel-cse').value;
+  const mes = parseInt(document.getElementById('sel-mes').value);
+  const ano = parseInt(document.getElementById('sel-ano').value);
+  const notas = document.getElementById('txt-notas').value;
+  const status = document.getElementById('ingreso-status');
+
+  if (!cse) { mostrarStatus(status, 'Selecciona un CSE', 'err'); return; }
+  if (!sucSeleccionadas.length) { mostrarStatus(status, 'Selecciona al menos una sucursal', 'err'); return; }
+
+  const svcsMarcados = [];
+  SERVICIOS.forEach((s, i) => {
+    const chk = document.getElementById('chk' + i);
+    const inp = document.getElementById('hh' + i);
+    if (chk && chk.checked) svcsMarcados.push({...s, hh_reales: parseFloat(inp.value||0)});
+  });
+  if (!svcsMarcados.length) { mostrarStatus(status, 'Marca al menos un servicio', 'err'); return; }
+
+  const nuevas = [];
+  sucSeleccionadas.forEach(suc => {
+    svcsMarcados.forEach(sv => {
+      nuevas.push({
+        _id: 'r' + Date.now() + Math.random().toString(36).slice(2),
+        cse, mes, ano, empresa: suc.empresa, sucursal: suc.sucursal, industria: suc.industria,
+        codigo: sv.codigo, servicio: sv.nombre, categoria: sv.cat,
+        hh_reales: sv.hh_reales, hh_referencial: sv.hh, notas
+      });
+    });
+  });
+
+  historial = historial.concat(nuevas);
+  guardarHistorial();
+
+  const nS = sucSeleccionadas.length, nSv = svcsMarcados.length;
+  const msgBase = nuevas.length + ' entregas - ' + nS + ' sucursal' + (nS>1?'es':'') + ', ' + nSv + ' servicio' + (nSv>1?'s':'');
+  mostrarStatus(status, ' Guardando ' + msgBase + ' en Sheet...', 'loading');
+
+  syncConSheet(nuevas).then(ok => {
+    if (ok) mostrarStatus(status, '[OK] ' + msgBase + ' guardadas en Google Sheets', 'ok');
+    else mostrarStatus(status, '[OK] ' + msgBase + ' guardadas localmente (Sheet sin conexión)', 'ok');
+  });
+
+  document.getElementById('txt-notas').value = '';
+  limpiarSucursales();
+  renderServicios(false);
+}
+
+// --- DASHBOARD ----------------------------------------------------------------
+let chartEvolucion = null;
+let chartIndustria = null;
+let chartEmpresas = null;
+let chartSucursales = null;
+let cseActivosSuc = {Lore:true, Lica:true, Domi:true, Rod:true};
+let cseActivos = {Lore:true, Lica:true, Domi:true, Rod:true};
+const CSES = ['Lore','Lica','Domi','Rod'];
+const COLS = {Lore:'#0F3D6E', Lica:'#2DB04B', Domi:'#7C3AED', Rod:'#D97706'};
+const COLS_BG = {Lore:'rgba(15,61,110,0.12)', Lica:'rgba(45,176,75,0.12)', Domi:'rgba(124,58,237,0.12)', Rod:'rgba(217,119,6,0.12)'};
+
+function renderDashboard() {
+  const mes = parseInt(document.getElementById('d-mes').value);
+  const ano = parseInt(document.getElementById('d-ano').value);
+  const cseGlobal = document.getElementById('d-cse-global') ? document.getElementById('d-cse-global').value : '';
+  let data = historial.filter(d =>
+    (!mes || d.mes===mes) && (!ano || d.ano===ano) && (!cseGlobal || d.cse===cseGlobal)
+  );
+
+  // Métricas
+  document.getElementById('m-hh').textContent = data.reduce((a,d)=>a+d.hh_reales,0).toFixed(1);
+  document.getElementById('m-ent').textContent = data.length;
+  document.getElementById('m-suc').textContent = new Set(data.map(d=>d.empresa+'|'+d.sucursal)).size;
+  document.getElementById('m-svcu').textContent = new Set(data.map(d=>d.codigo)).size;
+
+  // Barras por CSE
+  const hhCse = CSES.map(c => data.filter(d=>d.cse===c).reduce((a,d)=>a+d.hh_reales,0));
+  const maxHH = Math.max(...hhCse, 1);
+  document.getElementById('cse-bars').innerHTML = CSES.map((c,i) =>
+    '<div class="bar-row"><span style="font-size:13px;font-weight:600;color:#374151">' + c + '</span>' +
+    '<div class="bar-track"><div class="bar-fill" style="width:' + (hhCse[i]/maxHH*100).toFixed(1) + '%;background:' + COLS[c] + '"></div></div>' +
+    '<span style="font-size:13px;font-weight:600;text-align:right">' + hhCse[i].toFixed(1) + '</span></div>'
+  ).join('') || '<div class="empty-state">Sin datos</div>';
+
+  // Top servicios
+  const svcCount = {};
+  data.forEach(d => { svcCount[d.codigo] = (svcCount[d.codigo]||0)+1; });
+  const sorted = Object.entries(svcCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxC = sorted[0]?.[1]||1;
+  document.getElementById('top-svcs').innerHTML = sorted.map(([cod,cnt]) =>
+    '<div class="bar-row" style="margin-bottom:6px"><span style="font-size:11px;font-family:monospace;color:#9CA3AF">' + cod + '</span>' +
+    '<div class="bar-track"><div class="bar-fill" style="width:' + (cnt/maxC*100).toFixed(1) + '%;background:#2DB04B"></div></div>' +
+    '<span style="font-size:13px;font-weight:600;text-align:right">' + cnt + 'x</span></div>'
+  ).join('') || '<div class="empty-state">Sin datos</div>';
+
+  // Gráfico evolución mensual
+  renderGraficoEvolucion();
+  renderGraficoIndustria();
+  renderGraficoEmpresas();
+  renderGraficoSucursales();
+  renderCseToggles();
+  renderCseTogglesSuc();
+}
+
+function renderCseToggles() {
+  const cont = document.getElementById('cse-toggles');
+  if (!cont) return;
+  cont.innerHTML = '';
+  CSES.forEach(c => {
+    const btn = document.createElement('button');
+    btn.textContent = c;
+    btn.style.cssText = 'padding:4px 12px;border-radius:99px;border:2px solid ' + COLS[c] + ';background:' + (cseActivos[c] ? COLS[c] : 'white') + ';color:' + (cseActivos[c] ? 'white' : COLS[c]) + ';font-size:12px;font-weight:600;cursor:pointer;margin-right:4px';
+    btn.addEventListener('click', () => toggleCSE(c));
+    cont.appendChild(btn);
+  });
+}
+
+function toggleCSE(cse) {
+  cseActivos[cse] = !cseActivos[cse];
+  renderGraficoEvolucion();
+  renderCseToggles();
+}
+
+function renderGraficoEvolucion() {
+  const anoComp = parseInt(document.getElementById('d-ano-evol')?.value || 0);
+  const dataTodos = anoComp ? historial.filter(d => d.ano===anoComp) : historial;
+
+  // Obtener todos los meses con datos
+  const mesesConDatos = [...new Set(dataTodos.map(d => d.mes))].sort((a,b)=>a-b);
+  if (!mesesConDatos.length) {
+    if (chartEvolucion) { chartEvolucion.destroy(); chartEvolucion = null; }
+    return;
+  }
+
+  const labels = mesesConDatos.map(m => MESES[m]);
+  const datasets = CSES.filter(c => cseActivos[c]).map(c => ({
+    label: c,
+    data: mesesConDatos.map(m => {
+      return dataTodos.filter(d => d.cse===c && d.mes===m).reduce((a,d)=>a+d.hh_reales,0);
+    }),
+    borderColor: COLS[c],
+    backgroundColor: COLS_BG[c],
+    borderWidth: 2.5,
+    pointRadius: 5,
+    pointHoverRadius: 7,
+    tension: 0.3,
+    fill: false,
+  }));
+
+  const ctx = document.getElementById('chart-evolucion');
+  if (!ctx) return;
+  if (chartEvolucion) chartEvolucion.destroy();
+  chartEvolucion = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(2) + ' HH'
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: '#F3F4F6' }, ticks: { font: { size: 12 } } },
+        y: {
+          grid: { color: '#F3F4F6' },
+          ticks: { font: { size: 12 }, callback: v => v + ' HH' },
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
+function renderGraficoIndustria() {
+  const mes = parseInt(document.getElementById('d-mes').value);
+  const ano = parseInt(document.getElementById('d-ano').value);
+  const data = historial.filter(d => (!mes || d.mes===mes) && (!ano || d.ano===ano));
+
+  const porSvc = {};
+  data.forEach(d => {
+    const key = d.codigo;
+    if (!porSvc[key]) porSvc[key] = { nombre: d.servicio, cat: d.categoria, hh: 0 };
+    porSvc[key].hh += d.hh_reales;
+  });
+  const sorted = Object.entries(porSvc).sort((a,b) => b[1].hh - a[1].hh).slice(0, 15);
+  if (!sorted.length) { if (chartIndustria) { chartIndustria.destroy(); chartIndustria = null; } return; }
+
+  const CAT_COL = { SOP:'#0F3D6E', SAS:'#2DB04B', EDU:'#7C3AED', COM:'#D97706' };
+  const labels  = sorted.map(([cod]) => cod);
+  const valores = sorted.map(([, d]) => parseFloat(d.hh.toFixed(2)));
+  const colores = sorted.map(([, d]) => CAT_COL[d.cat] || '#6B7280');
+
+  const ctx = document.getElementById('chart-industria');
+  if (!ctx) return;
+  if (chartIndustria) chartIndustria.destroy();
+  chartIndustria = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'HH reales',
+        data: valores,
+        backgroundColor: colores.map(c => c + 'CC'),
+        borderColor: colores,
+        borderWidth: 1.5,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const svc = sorted[ctx.dataIndex];
+              return svc[1].nombre + ': ' + ctx.parsed.x.toFixed(2) + ' HH';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: { color: '#F3F4F6' },
+          ticks: { font: { size: 11 }, callback: v => v + ' HH' }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { font: { size: 11 } }
+        }
+      }
+    }
+  });
+}
+
+// --- HISTORIAL ----------------------------------------------------------------
+function renderGraficoEmpresas() {
+  const mes = parseInt(document.getElementById('d-mes').value);
+  const ano = parseInt(document.getElementById('d-ano').value);
+  const cseFilter = document.getElementById('d-cse-global') ? document.getElementById('d-cse-global').value : '';
+  let data = historial.filter(d => (!mes || d.mes===mes) && (!ano || d.ano===ano) && (!cseFilter || d.cse===cseFilter));
+
+  // Agrupar HH por empresa y por CSE
+  const porEmpresa = {};
+  data.forEach(d => {
+    if (!porEmpresa[d.empresa]) porEmpresa[d.empresa] = { Lore:0, Lica:0, Domi:0, Rod:0, total:0 };
+    porEmpresa[d.empresa][d.cse] = (porEmpresa[d.empresa][d.cse]||0) + d.hh_reales;
+    porEmpresa[d.empresa].total += d.hh_reales;
+  });
+
+  const sorted = Object.entries(porEmpresa).sort((a,b) => b[1].total - a[1].total).slice(0, 15);
+  if (!sorted.length) { if (chartEmpresas) { chartEmpresas.destroy(); chartEmpresas = null; } return; }
+
+  const labels = sorted.map(([emp]) => emp);
+  const CSES = ['Lore','Lica','Domi','Rod'];
+  const COLS = { Lore:'#0F3D6E', Lica:'#2DB04B', Domi:'#7C3AED', Rod:'#D97706' };
+  const COLS_BG = { Lore:'rgba(15,61,110,0.8)', Lica:'rgba(45,176,75,0.8)', Domi:'rgba(124,58,237,0.8)', Rod:'rgba(217,119,6,0.8)' };
+
+  const datasets = CSES.map(cse => ({
+    label: cse,
+    data: sorted.map(([, d]) => parseFloat((d[cse]||0).toFixed(2))),
+    backgroundColor: COLS_BG[cse],
+    borderColor: COLS[cse],
+    borderWidth: 1,
+    borderRadius: 3,
+  })).filter(ds => ds.data.some(v => v > 0));
+
+  const ctx = document.getElementById('chart-empresas');
+  if (!ctx) return;
+  if (chartEmpresas) chartEmpresas.destroy();
+  chartEmpresas = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: { font: { size: 11 }, padding: 10, boxWidth: 12 }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.dataset.label + ': ' + ctx.parsed.x.toFixed(2) + ' HH'
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          beginAtZero: true,
+          grid: { color: '#F3F4F6' },
+          ticks: { font: { size: 11 }, callback: v => v + ' HH' }
+        },
+        y: {
+          stacked: true,
+          grid: { display: false },
+          ticks: { font: { size: 10 } }
+        }
+      }
+    }
+  });
+}
+
+function actualizarFiltrosHistorial() {
+  const cse = document.getElementById('h-cse').value;
+  const empSel = document.getElementById('h-empresa').value;
+
+  // Actualizar empresas según CSE
+  const empresas = [...new Set(historial
+    .filter(d => !cse || d.cse === cse)
+    .map(d => d.empresa)
+  )].sort();
+  const selEmp = document.getElementById('h-empresa');
+  const empActual = selEmp.value;
+  selEmp.innerHTML = '<option value="">Todas las empresas</option>' +
+    empresas.map(e => '<option value="' + e + '"' + (e===empActual?'  selected':'') + '>' + e + '</option>').join('');
+
+  // Actualizar sucursales según CSE + empresa
+  const empFiltro = selEmp.value;
+  const sucursales = [...new Set(historial
+    .filter(d => (!cse || d.cse===cse) && (!empFiltro || d.empresa===empFiltro))
+    .map(d => d.sucursal)
+  )].sort();
+  const selSuc = document.getElementById('h-sucursal');
+  const sucActual = selSuc.value;
+  selSuc.innerHTML = '<option value="">Todas las sucursales</option>' +
+    sucursales.map(s => '<option value="' + s + '"' + (s===sucActual?' selected':'') + '>' + s + '</option>').join('');
+
+  // Actualizar códigos según filtros activos
+  const sucFiltro = selSuc.value;
+  const codigos = [...new Set(historial
+    .filter(d => (!cse||d.cse===cse) && (!empFiltro||d.empresa===empFiltro) && (!sucFiltro||d.sucursal===sucFiltro))
+    .map(d => d.codigo)
+  )].sort();
+  const selCod = document.getElementById('h-codigo');
+  const codActual = selCod.value;
+  selCod.innerHTML = '<option value="">Todos los servicios</option>' +
+    codigos.map(c => '<option value="' + c + '"' + (c===codActual?' selected':'') + '>' + c + '</option>').join('');
+
+  renderHistorial();
+}
+
+function inicializarFiltrosHistorial() {
+  actualizarFiltrosHistorial();
+}
+
+function renderCseTogglesSuc() {
+  const cont = document.getElementById('cse-toggles-suc');
+  if (!cont) return;
+  cont.innerHTML = '';
+  CSES.forEach(c => {
+    const btn = document.createElement('button');
+    btn.textContent = c;
+    btn.style.cssText = 'padding:4px 12px;border-radius:99px;border:2px solid ' + COLS[c] + ';background:' + (cseActivosSuc[c] ? COLS[c] : 'white') + ';color:' + (cseActivosSuc[c] ? 'white' : COLS[c]) + ';font-size:12px;font-weight:600;cursor:pointer;margin-right:4px';
+    btn.addEventListener('click', () => {
+      cseActivosSuc[c] = !cseActivosSuc[c];
+      renderGraficoSucursales();
+      renderCseTogglesSuc();
+    });
+    cont.appendChild(btn);
+  });
+}
+
+function renderGraficoSucursales() {
+  const anoComp = parseInt(document.getElementById('d-ano-evol')?.value || 0);
+  const dataTodos = anoComp ? historial.filter(d => d.ano===anoComp) : historial;
+
+  const mesesConDatos = [...new Set(dataTodos.map(d => d.mes))].sort((a,b) => a-b);
+  if (!mesesConDatos.length) {
+    if (chartSucursales) { chartSucursales.destroy(); chartSucursales = null; }
+    return;
+  }
+
+  const labels = mesesConDatos.map(m => MESES[m]);
+  const datasets = CSES.filter(c => cseActivosSuc[c]).map(c => ({
+    label: c,
+    data: mesesConDatos.map(m => {
+      const sucursalesUnicas = new Set(
+        dataTodos.filter(d => d.cse===c && d.mes===m).map(d => d.sucursal)
+      );
+      return sucursalesUnicas.size;
+    }),
+    borderColor: COLS[c],
+    backgroundColor: COLS_BG[c],
+    borderWidth: 2.5,
+    pointRadius: 5,
+    pointHoverRadius: 7,
+    tension: 0.3,
+    fill: false,
+  }));
+
+  const ctx = document.getElementById('chart-sucursales');
+  if (!ctx) return;
+  if (chartSucursales) chartSucursales.destroy();
+  chartSucursales = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + ' sucursal' + (ctx.parsed.y !== 1 ? 'es' : '')
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: '#F3F4F6' }, ticks: { font: { size: 12 } } },
+        y: {
+          grid: { color: '#F3F4F6' },
+          beginAtZero: true,
+          ticks: {
+            font: { size: 12 },
+            stepSize: 1,
+            callback: v => Number.isInteger(v) ? v : ''
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderHistorial() {
+  const cse     = document.getElementById('h-cse').value;
+  const empresa = document.getElementById('h-empresa').value;
+  const sucursal= document.getElementById('h-sucursal').value;
+  const codigo  = document.getElementById('h-codigo').value;
+  const mes = parseInt(document.getElementById('h-mes').value);
+  const ano = parseInt(document.getElementById('h-ano').value);
+  const cont = document.getElementById('hist-container');
+
+  const data = historial.filter(d =>
+    (!cse     || d.cse===cse) &&
+    (!empresa || d.empresa===empresa) &&
+    (!sucursal|| d.sucursal===sucursal) &&
+    (!codigo  || d.codigo===codigo) &&
+    (!mes     || d.mes===mes) &&
+    (!ano     || d.ano===ano)
+  );
+
+  if (!data.length) { cont.innerHTML = '<div class="empty-state">No hay registros con ese filtro</div>'; return; }
+
+  const table = document.createElement('table');
+  table.className = 'hist-table';
+  const thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>CSE</th><th>Mes</th><th>Empresa</th><th>Sucursal</th><th>Servicio</th><th>HH</th><th></th></tr>';
+  table.appendChild(thead);
+  const tbody = document.createElement('tbody');
+
+  data.slice().reverse().slice(0,200).forEach(registro => {
+    const tr = document.createElement('tr');
+
+    const tdCse = document.createElement('td');
+    tdCse.innerHTML = '<span class="pill pill-' + registro.cse.toLowerCase() + '">' + registro.cse + '</span>';
+
+    const tdMes = document.createElement('td');
+    const selMes = document.createElement('select');
+    selMes.style.cssText = 'font-size:12px;border:1px solid #D1D5DB;border-radius:4px;padding:2px 4px;background:white;color:#374151';
+    MESES.forEach((nombre, num) => {
+      if (num === 0) return;
+      const opt = document.createElement('option');
+      opt.value = num;
+      opt.textContent = nombre;
+      if (num === registro.mes) opt.selected = true;
+      selMes.appendChild(opt);
+    });
+    selMes.addEventListener('change', function() {
+      const nuevoMes = parseInt(this.value);
+      registro.mes = nuevoMes;
+      guardarHistorial();
+      actualizarHHEnSheet(registro._id + '_mes', nuevoMes); // placeholder sync
+    });
+    tdMes.appendChild(selMes);
+    const spanAno = document.createElement('span');
+    spanAno.textContent = ' ' + registro.ano;
+    spanAno.style.cssText = 'font-size:12px;color:#6B7280';
+    tdMes.appendChild(spanAno);
+
+    const tdEmp = document.createElement('td');
+    tdEmp.textContent = registro.empresa;
+
+    const tdSuc = document.createElement('td');
+    tdSuc.textContent = registro.sucursal;
+    tdSuc.style.cssText = 'max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    tdSuc.title = registro.sucursal;
+
+    const tdCod = document.createElement('td');
+    tdCod.textContent = registro.codigo;
+    tdCod.style.cssText = 'font-family:monospace;font-size:11px;color:#6B7280';
+
+    const tdHH = document.createElement('td');
+    const inp = document.createElement('input');
+    inp.type = 'number'; inp.step = '0.25'; inp.min = '0';
+    inp.value = parseFloat(registro.hh_reales).toFixed(2);
+    inp.style.cssText = 'width:58px;padding:3px 5px;font-size:12px;border:1px solid #D1D5DB;border-radius:4px;text-align:center';
+    inp.addEventListener('change', function() {
+      const v = parseFloat(this.value);
+      if (!isNaN(v) && v >= 0) {
+        registro.hh_reales = v;
+        guardarHistorial();
+        actualizarHHEnSheet(registro._id, v);
+      }
+    });
+    tdHH.appendChild(inp);
+
+    const tdDel = document.createElement('td');
+    const btn = document.createElement('button');
+    btn.textContent = 'x';
+    btn.title = 'Eliminar';
+    btn.style.cssText = 'background:none;border:none;cursor:pointer;color:#D1D5DB;font-size:15px;padding:2px 6px;border-radius:4px;font-weight:bold';
+    btn.addEventListener('mouseenter', () => btn.style.color = '#DC2626');
+    btn.addEventListener('mouseleave', () => btn.style.color = '#D1D5DB');
+    btn.addEventListener('click', function() {
+      if (!confirm('Eliminar este registro?\n\n' + registro.cse + ' - ' + registro.empresa + ' - ' + registro.sucursal + '\n' + registro.codigo + ' - ' + registro.hh_reales + ' HH')) return;
+      historial = historial.filter(r => r._id !== registro._id);
+      guardarHistorial();
+      tr.remove();
+      eliminarEnSheet(registro._id);
+    });
+    tdDel.appendChild(btn);
+
+    tr.append(tdCse, tdMes, tdEmp, tdSuc, tdCod, tdHH, tdDel);
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  cont.innerHTML = '';
+  cont.appendChild(table);
+  const nota = document.createElement('div');
+  nota.style.cssText = 'font-size:12px;color:#9CA3AF;padding:8px 0';
+  nota.textContent = data.length + ' registros - edita HH directamente o usa x para eliminar';
+  cont.appendChild(nota);
+}
+
+document.getElementById('btn-del-filtrados').addEventListener('click', function() {
+  const cse      = document.getElementById('h-cse').value;
+  const empresa  = document.getElementById('h-empresa').value;
+  const sucursal = document.getElementById('h-sucursal').value;
+  const codigo   = document.getElementById('h-codigo').value;
+  const mes = parseInt(document.getElementById('h-mes').value);
+  const ano = parseInt(document.getElementById('h-ano').value);
+  const n = historial.filter(d =>
+    (!cse||d.cse===cse) && (!empresa||d.empresa===empresa) &&
+    (!sucursal||d.sucursal===sucursal) && (!codigo||d.codigo===codigo) &&
+    (!mes||d.mes===mes) && (!ano||d.ano===ano)
+  ).length;
+  if (!n) { alert('No hay registros con ese filtro.'); return; }
+  const desc = [cse, empresa, sucursal, codigo, mes?MESES[mes]:'', ano||''].filter(Boolean).join(' - ');
+  if (!confirm('Eliminar ' + n + ' registro' + (n>1?'s':'') + ' de:\n' + desc)) return;
+  historial = historial.filter(d => !(
+    (!cse||d.cse===cse) && (!empresa||d.empresa===empresa) &&
+    (!sucursal||d.sucursal===sucursal) && (!codigo||d.codigo===codigo) &&
+    (!mes||d.mes===mes) && (!ano||d.ano===ano)
+  ));
+  guardarHistorial();
+  renderHistorial();
+});
+
+// --- CLIENTES -----------------------------------------------------------------
+function agregarSucursal() {
+  const empresa = document.getElementById('n-empresa').value.trim();
+  const sucursal = document.getElementById('n-sucursal').value.trim();
+  const cse = document.getElementById('n-cse').value;
+  const industria = document.getElementById('n-industria').value;
+  const dificultad = parseFloat(document.getElementById('n-dif').value);
+  const status = document.getElementById('add-status');
+
+  if (!empresa || !sucursal || !cse || !industria) { mostrarStatus(status, 'Completa todos los campos', 'err'); return; }
+  if (getSucActivas().some(s => s.empresa.toLowerCase()===empresa.toLowerCase() && s.sucursal.toLowerCase()===sucursal.toLowerCase())) {
+    mostrarStatus(status, 'Ya existe esa empresa + sucursal', 'err'); return;
+  }
+  sucCustom.push({empresa, sucursal, cse, industria, dificultad, esCustom: true});
+  localStorage.setItem('cse_suc_custom', JSON.stringify(sucCustom));
+  document.getElementById('n-empresa').value = '';
+  document.getElementById('n-sucursal').value = '';
+  document.getElementById('n-cse').value = '';
+  document.getElementById('n-industria').value = '';
+  mostrarStatus(status, '[OK] ' + empresa + ' - ' + sucursal + ' agregada (CSE: ' + cse + ')', 'ok');
+  renderLista(); actualizarDatalist();
+}
+
+function cargarSucursalesCierre() {
+  const cse = document.getElementById('c-cse').value;
+  const sel = document.getElementById('c-suc');
+  sel.innerHTML = '<option value="">- Seleccionar -</option>';
+  if (!cse) return;
+  const activas = getSucActivas().filter(s => s.cse === cse);
+  let lastEmp = '';
+  activas.forEach(s => {
+    if (s.empresa !== lastEmp) {
+      const og = document.createElement('optgroup'); og.label = s.empresa; sel.appendChild(og); lastEmp = s.empresa;
+    }
+    const opt = document.createElement('option');
+    opt.value = JSON.stringify({empresa: s.empresa, sucursal: s.sucursal});
+    opt.textContent = s.sucursal;
+    sel.lastChild.appendChild(opt);
+  });
+}
+
+function cerrarSucursal() {
+  const val = document.getElementById('c-suc').value;
+  const status = document.getElementById('close-status');
+  if (!val) { mostrarStatus(status, 'Selecciona una sucursal', 'err'); return; }
+  const {empresa, sucursal} = JSON.parse(val);
+  if (!confirm('Cerrar "' + empresa + ' - ' + sucursal + '"?\n\nNo aparecerá en el ingreso mensual. El historial se conserva.')) return;
+  sucCerradas.push({empresa, sucursal, fechaCierre: new Date().toISOString()});
+  localStorage.setItem('cse_suc_cerradas', JSON.stringify(sucCerradas));
+  mostrarStatus(status, '[OK] ' + empresa + ' - ' + sucursal + ' cerrada', 'ok');
+  document.getElementById('c-suc').value = '';
+  cargarSucursalesCierre();
+  renderLista();
+}
+
+function cargarEmpresasSelectorSvc() {
+  const sel = document.getElementById('svc-empresa');
+  if (!sel) return;
+  const empresas = [...new Set(getSucActivas().map(s => s.empresa))].sort();
+  sel.innerHTML = '<option value="">— Seleccionar empresa —</option>' +
+    empresas.map(e => '<option value="' + e + '">' + e + '</option>').join('');
+}
+
+function renderServiciosEmpresa() {
+  const empresa = document.getElementById('svc-empresa').value;
+  const cont = document.getElementById('svc-empresa-container');
+  cont.innerHTML = '';
+  if (!empresa) return;
+
+  const contratados = getServiciosEmpresa(empresa);
+  const esDefault = !serviciosEmpresa[empresa];
+
+  const info = document.createElement('div');
+  info.style.cssText = 'margin:10px 0 8px;font-size:12px;color:#6B7280';
+  info.textContent = esDefault
+    ? 'Sin configurar — mostrando todos. Marca los que contrató esta empresa:'
+    : 'Servicios configurados. Desmarca los que no aplican:';
+  cont.appendChild(info);
+
+  let lastCat = '';
+  let gridDiv = null;
+
+  SERVICIOS.forEach(s => {
+    if (s.cat !== lastCat) {
+      const catHdr = document.createElement('div');
+      catHdr.innerHTML = '<span class="cat-header cat-' + s.cat + '" style="margin:8px 0 4px">' + s.cat + '</span>';
+      cont.appendChild(catHdr);
+      gridDiv = document.createElement('div');
+      gridDiv.style.cssText = 'display:grid;grid-template-columns:repeat(2,1fr);gap:4px;margin-bottom:4px';
+      cont.appendChild(gridDiv);
+      lastCat = s.cat;
+    }
+    const lbl2 = document.createElement('label');
+    lbl2.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:12px;padding:4px 6px;border-radius:4px;cursor:pointer;background:#F9FAFB';
+    const chk2 = document.createElement('input');
+    chk2.type = 'checkbox'; chk2.value = s.codigo;
+    if (contratados.includes(s.codigo)) chk2.checked = true;
+    chk2.addEventListener('change', () => guardarServiciosEmpresaUI(empresa));
+    const span2 = document.createElement('span');
+    span2.innerHTML = '<span style="font-family:monospace;font-size:10px;color:#9CA3AF">' + s.codigo + '</span><br>' + s.nombre;
+    lbl2.appendChild(chk2); lbl2.appendChild(span2);
+    gridDiv.appendChild(lbl2);
+  });
+
+  const btnDiv = document.createElement('div');
+  btnDiv.style.cssText = 'margin-top:12px;display:flex;gap:8px';
+  const btnTodos = document.createElement('button');
+  btnTodos.textContent = 'Seleccionar todos';
+  btnTodos.style.cssText = 'font-size:12px;padding:5px 12px;border:1px solid #D1D5DB;border-radius:6px;background:white;cursor:pointer';
+  btnTodos.addEventListener('click', () => seleccionarTodosEmpresa(empresa));
+  const btnNinguno = document.createElement('button');
+  btnNinguno.textContent = 'Deseleccionar todos';
+  btnNinguno.style.cssText = 'font-size:12px;padding:5px 12px;border:1px solid #D1D5DB;border-radius:6px;background:white;cursor:pointer';
+  btnNinguno.addEventListener('click', () => deseleccionarTodosEmpresa(empresa));
+  btnDiv.appendChild(btnTodos); btnDiv.appendChild(btnNinguno);
+  cont.appendChild(btnDiv);
+}
+
+function guardarServiciosEmpresaUI(empresa) {
+  const checkboxes = document.querySelectorAll('#svc-empresa-container input[type=checkbox]');
+  const seleccionados = [...checkboxes].filter(c => c.checked).map(c => c.value);
+  serviciosEmpresa[empresa] = seleccionados;
+  guardarServiciosEmpresa();
+  const status = document.getElementById('svc-empresa-status');
+  status.className = 'status-msg status-ok';
+  status.textContent = '[OK] ' + seleccionados.length + ' servicios guardados para ' + empresa;
+  status.style.display = 'block';
+  setTimeout(() => status.style.display = 'none', 2500);
+}
+
+function seleccionarTodosEmpresa(empresa) {
+  serviciosEmpresa[empresa] = SERVICIOS.map(s => s.codigo);
+  guardarServiciosEmpresa();
+  renderServiciosEmpresa();
+}
+
+function deseleccionarTodosEmpresa(empresa) {
+  serviciosEmpresa[empresa] = [];
+  guardarServiciosEmpresa();
+  renderServiciosEmpresa();
+}
+
+function renderLista() {
+  const filterCse = document.getElementById('l-cse').value;
+  const q = document.getElementById('l-search').value.toLowerCase();
+  let activas = getSucActivas();
+  if (filterCse) activas = activas.filter(s => s.cse === filterCse);
+  if (q) activas = activas.filter(s => s.empresa.toLowerCase().includes(q) || s.sucursal.toLowerCase().includes(q));
+  const cont = document.getElementById('lista-container');
+  if (!activas.length) { cont.innerHTML = '<div class="empty-state">Sin resultados</div>'; return; }
+  const byEmp = {};
+  activas.forEach(s => { if (!byEmp[s.empresa]) byEmp[s.empresa] = []; byEmp[s.empresa].push(s); });
+  const COLS = {Lore:'#DBEAFE:#1E40AF',Lica:'#DCFCE7:#166534',Domi:'#EDE9FE:#5B21B6',Rod:'#FEF3C7:#92400E'};
+  let html = '';
+  Object.entries(byEmp).forEach(([emp, sucs]) => {
+    html += '<div style="margin-bottom:10px"><div style="font-size:12px;font-weight:600;color:#374151;padding:5px 0;border-bottom:1px solid #F3F4F6;display:flex;justify-content:space-between"><span>' + emp + '</span><span style="color:#9CA3AF;font-weight:400">' + sucs.length + ' sucursal' + (sucs.length>1?'es':'') + '</span></div>';
+    sucs.forEach(s => {
+      const [bg, txt] = (COLS[s.cse]||'#F3F4F6:#374151').split(':');
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #FAFAFA"><span style="flex:1;font-size:13px">' + (s.esCustom?'[nuevo] ':'') + s.sucursal + '</span><span style="font-size:11px;color:#9CA3AF">' + s.industria + '</span><span style="font-size:11px;padding:2px 7px;border-radius:99px;background:' + bg + ';color:' + txt + '">' + s.cse + '</span></div>';
+    });
+    html += '</div>';
+  });
+  html += '<div style="font-size:12px;color:#9CA3AF;padding:6px 0">' + activas.length + ' activas - ' + sucCerradas.length + ' cerradas</div>';
+  cont.innerHTML = html;
+}
+
+function actualizarDatalist() {
+  const dl = document.getElementById('emp-list');
+  if (!dl) return;
+  const emps = [...new Set(getSucActivas().map(s => s.empresa))].sort();
+  dl.innerHTML = emps.map(e => '<option value="' + e + '">').join('');
+}
+
+// --- CONFIG -------------------------------------------------------------------
+async function sincronizarDesdeSheet() {
+  const status = document.getElementById('cfg-status');
+  mostrarStatus(status, ' Conectando con Google Sheets...', 'loading');
+  const data = await cargarDesdeSheet('', 0, 0);
+  if (!data) { mostrarStatus(status, '[ERROR] No se pudo conectar con el Sheet. Verifica que el script este publicado.', 'err'); return; }
+  if (!data.length) { mostrarStatus(status, 'El Sheet esta vacio. Importa primero el CSV.', 'err'); return; }
+  // Reemplazar completamente con los datos del Sheet
+  historial = data;
+  guardarHistorial();
+  mostrarStatus(status, '[OK] Sincronizado - ' + historial.length + ' registros cargados desde el Sheet', 'ok');
+  renderHistorial();
+  renderDashboard();
+}
+
+// --- HELPERS -----------------------------------------------------------------
+function mostrarStatus(el, msg, tipo) {
+  el.className = 'status-msg status-' + tipo;
+  el.textContent = msg;
+  el.style.display = 'block';
+  if (tipo === 'ok') setTimeout(() => el.style.display = 'none', 4000);
+}
+
+// --- INIT ---------------------------------------------------------------------
+document.getElementById('cfg-sheet-id').value = SHEET_ID;
+document.getElementById('cfg-link').href = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID;
+actualizarDatalist();
+renderLista();
+
+// Datos de prueba si el historial está vacío
+if (historial.length === 0) {
+  historial = [
+    {_id:'t1', cse:'Lica', mes:5, ano:2026, empresa:'Euro', sucursal:'Proyecto Amengual', industria:'Construcción', codigo:'SOP-009', servicio:'Carga mensual de trazabilidad', categoria:'SOP', hh_reales:0.67, hh_referencial:0.5, notas:''},
+    {_id:'t2', cse:'Lica', mes:5, ano:2026, empresa:'Euro', sucursal:'Proyecto Amengual', industria:'Construcción', codigo:'EDU-001', servicio:'Asesoría en Gestión de Residuos', categoria:'EDU', hh_reales:1.5, hh_referencial:1.5, notas:''},
+    {_id:'t3', cse:'Lica', mes:5, ano:2026, empresa:'Euro', sucursal:'Santa Elena', industria:'Construcción', codigo:'SOP-009', servicio:'Carga mensual de trazabilidad', categoria:'SOP', hh_reales:0.67, hh_referencial:0.5, notas:''},
+    {_id:'t4', cse:'Lore', mes:5, ano:2026, empresa:'COPEC', sucursal:'CDC Maipú', industria:'Combustible', codigo:'SOP-023', servicio:'Customer Success Executive', categoria:'SOP', hh_reales:1.0, hh_referencial:1.0, notas:''},
+    {_id:'t5', cse:'Domi', mes:5, ano:2026, empresa:'SODIMAC', sucursal:'HC Las Condes', industria:'Retail', codigo:'EDU-001', servicio:'Asesoría en Gestión de Residuos', categoria:'EDU', hh_reales:0.21, hh_referencial:0.21, notas:''},
+  ];
+  guardarHistorial();
+}
+</script>
+</body>
+</html>
